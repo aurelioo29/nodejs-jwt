@@ -1,42 +1,38 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const app = express();
-var corsOptions = {
-  origin: "http://localhost:3000",
-};
+require("dotenv").config();
 
-dotenv.config();
-const port = process.env.PORT;
+var corsOptions = {
+  origin: "http://localhost:8081",
+};
 
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// database
+//database
 const db = require("./models");
-const Role = db.ROLES;
+const Role = db.role;
 db.sequelize.sync();
 
-// end point basic
+//default end point
 app.get("/", (req, res) => {
-  const debugMessage = "Welcome to Main Page";
-  res.json({ message: debugMessage });
-  console.log(debugMessage);
+  res.json({ message: "Belajar Microservice di UNPRI" });
 });
 
-// routes
-// require("../src/routes/auth.routes.js");
-require("../src/routes/user.routes.js");
-// require("../src/routes/user.routes.js");
+//routes
+require("./routes/auth.routes")(app);
+require("./routes/user.routes")(app);
 
-// start to run server
-app.listen(port, () => {
-  console.log("Express API running in http://localhost:" + port);
+//set port, listen for requests
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server Berjalan pada PORT ${PORT}.`);
 });
 
-// role permission
+//Role Permission User
 function initial() {
   Role.create({
     id: 1,

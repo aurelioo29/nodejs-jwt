@@ -1,13 +1,14 @@
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const db = require("../models/index.js");
-const config = require("../config/auth.config.js");
-const { where } = require("sequelize");
+const db = require("../models");
+const config = require("../config/auth.config");
 const User = db.user;
 const Role = db.role;
-const Op = db.sequelize.Op;
+const Op = db.Sequelize.Op;
+var jwt = require("jsonwebtoken");
+var bcrypt = require("bcryptjs");
+const { where } = require("sequelize");
 
 exports.signup = (req, res) => {
+  //Save User to Database
   User.create({
     username: req.body.username,
     email: req.body.email,
@@ -23,17 +24,24 @@ exports.signup = (req, res) => {
           },
         }).then((roles) => {
           user.setRoles(roles).then(() => {
-            res.send({ message: "User was registered successfully" });
+            res.status(201).json({
+              message: "User was registered successfully!",
+              data: req.body,
+            });
           });
         });
       } else {
+        // user role = 1
         user.setRoles([1]).then(() => {
-          res.send({ message: "User was registered successfully" });
+          res.status(201).json({
+            message: "User was registered successfully!",
+            data: req.body,
+          });
         });
       }
     })
     .catch((err) => {
-      console.log(res.status(500).send({ message: err.message }));
+      res.status(500).send({ message: err.message });
     });
 };
 
@@ -44,28 +52,32 @@ exports.signin = (req, res) => {
     },
   })
     .then((user) => {
-      if (!user) return res.status(400).send({ message: "User not found" });
+      if (!user) {
+        return res.status(404).send({ message: "User Not found." });
+      }
       var passwordIsValid = bcrypt.compareSync(
         req.body.password,
         user.password
       );
-      if (!passwordIsValid)
-        return res
-          .status(400)
-          .send({ accessToken: null, message: "Invalid Password" });
-      var token = jwt.signin({ id: user.id }, config.secret, {
-        expiresIn: 86400, // 24 hours
+      if (!passwordIsValid) {
+        return res.status(401).send({
+          accessToken: null,
+          message: "Invalid Password!",
+        });
+      }
+      var token = jwt.sign({ id: user.id }, config.secret, {
+        expiresIn: 86400, //24 hours
       });
       var authorities = [];
       user.getRoles().then((roles) => {
         for (let i = 0; i < roles.length; i++) {
-          authorities.push(`ROLE_${roles[i].name.toUpperCase()}`);
+          authorities.push("ROLE_" + roles[i].name.toUpperCase());
         }
         res.status(200).send({
           id: user.id,
           username: user.username,
           email: user.email,
-          roles: user.roles,
+          roles: authorities,
           accessToken: token,
         });
       });
