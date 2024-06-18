@@ -8,6 +8,8 @@ var corsOptions = {
   origin: "http://localhost:8081",
 };
 
+app.use(express.json());
+
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -25,6 +27,10 @@ app.get("/", (req, res) => {
 //routes
 require("./routes/auth.routes")(app);
 require("./routes/user.routes")(app);
+
+// crud
+const blogs = require("./routes/blog.routes");
+app.use("/api/blog", blogs);
 
 //set port, listen for requests
 const PORT = process.env.PORT || 8080;
