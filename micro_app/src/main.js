@@ -33,7 +33,7 @@ const blogs = require("./routes/blog.routes");
 app.use("/api/blog", blogs);
 
 //set port, listen for requests
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.NODE_DOCKER_PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server Berjalan pada PORT ${PORT}.`);
 });
